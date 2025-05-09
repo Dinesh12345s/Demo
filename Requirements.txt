@@ -1,0 +1,5 @@
+streamlit==1.25.0
+pandas==2.1.1
+matplotlib==3.8.0
+vaderSentiment==3.3.2
+nrclex==3.0.0
