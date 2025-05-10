@@ -1,5 +1,5 @@
-streamlit==1.25.0  # Latest compatible version of Streamlit
-vaderSentiment==3.3.2  # For sentiment analysis
-nrclex==3.0.0  # For emotion analysis
-pandas==2.0.3  # For data manipulation (CSV handling)
-plotly==5.15.0  # For interactive charts
+streamlit
+vaderSentiment
+nrclex
+pandas
+plotly
