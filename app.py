@@ -1,5 +1,6 @@
 import nltk
 nltk.download('punkt', quiet=True)
+nltk.download('averaged_perceptron_tagger', quiet=True)
 
 import streamlit as st
 st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")
