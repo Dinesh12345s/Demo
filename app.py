@@ -5,17 +5,6 @@ import pandas as pd
 import plotly.express as px
 import re
 
-# Download the necessary NLTK corpora
-def download_nltk_corpora():
-    try:
-        nltk.download('punkt', quiet=True)  # Required for tokenization
-        nltk.download('averaged_perceptron_tagger', quiet=True)  # POS Tagger
-        nltk.download('wordnet', quiet=True)  # WordNet
-        nltk.download('omw-1.4', quiet=True)  # OMW WordNet support
-    except Exception as e:
-        st.error(f"Error downloading NLTK corpora: {e}")
-
-download_nltk_corpora()
 
 # Initialize sentiment analyzer
 analyzer = SentimentIntensityAnalyzer()
