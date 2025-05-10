@@ -1,3 +1,13 @@
+import nltk
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('averaged_perceptron_tagger')
+import nltk
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+
 import streamlit as st
 st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")  # Must be first
 
