@@ -1,7 +1,3 @@
-if os.path.exists("custom_emotions.csv"):
-    emotion_df = pd.read_csv("custom_emotions.csv")
-else:
-    st.warning("Custom emotions file not found. Skipping custom emotion detection.")
 
 import streamlit as st
 st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")  # Must be first
