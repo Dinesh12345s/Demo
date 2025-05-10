@@ -1,11 +1,21 @@
 import nltk
-nltk.download('punkt', quiet=True)
-nltk.download('averaged_perceptron_tagger', quiet=True)
-nltk.download('wordnet', quiet=True)
-nltk.download('omw-1.4', quiet=True)
-
 import streamlit as st
 st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")
+
+# Ensure required corpora are downloaded
+@st.cache_resource(show_spinner=False)
+def download_nltk_corpora():
+    required = ['punkt', 'averaged_perceptron_tagger', 'wordnet', 'omw-1.4']
+    for corpus in required:
+        try:
+            nltk.data.find(f'tokenizers/{corpus}')  # For punkt
+        except LookupError:
+            try:
+                nltk.data.find(f'corpora/{corpus}')  # For wordnet, omw-1.4
+            except LookupError:
+                nltk.download(corpus, quiet=True)
+
+download_nltk_corpora()
 
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from nrclex import NRCLex
