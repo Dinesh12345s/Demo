@@ -1,6 +1,6 @@
-streamlit
-pandas
-plotly
-vaderSentiment
-nrclex
-nltk
+nltk==3.7
+streamlit==1.14.0
+vaderSentiment==3.3.2
+nrclex==1.0.0
+pandas==1.5.3
+plotly==5.9.0
