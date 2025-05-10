@@ -61,6 +61,12 @@ if st.button("Analyze"):
         st.write(f"**Message:** {user_message}")
         st.write(f"**Sentiment:** **{sentiment_label}** ({sentiment})")
 
+        # Visualize Sentiment (Pie Chart)
+        sentiment_data = {'Positive': sentiment['pos'], 'Neutral': sentiment['neu'], 'Negative': sentiment['neg']}
+        sentiment_df = pd.DataFrame(sentiment_data.items(), columns=["Sentiment", "Score"])
+        fig_sentiment = px.pie(sentiment_df, values='Score', names='Sentiment', title='Sentiment Distribution', color_discrete_sequence=px.colors.sequential.RdBu)
+        st.plotly_chart(fig_sentiment, use_container_width=True)
+
         # Visualize emotions (Bar Chart)
         if sorted_emotions:
             emotion_df = pd.DataFrame(sorted_emotions, columns=["Emotion", "Score"])
