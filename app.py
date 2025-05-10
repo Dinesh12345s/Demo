@@ -1,17 +1,15 @@
-import nltk  # <== FIRST import nltk
-nltk.download('punkt', quiet=True)  
+import nltk
+nltk.download('punkt', quiet=True)
 
 import streamlit as st
-from nrclex import NRCLex
-
-import streamlit as st
-st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")  # Must be first
+st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")
 
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from nrclex import NRCLex
 import pandas as pd
 import plotly.express as px
 import re
+
 
 # Initialize sentiment analyzer
 analyzer = SentimentIntensityAnalyzer()
