@@ -1,5 +1,6 @@
-pip install streamlit
-pip install nrclex
-pip install plotly
-pip install pandas
-pip install vaderSentiment
+streamlit
+pandas
+plotly
+vaderSentiment
+nrclex
+nltk
