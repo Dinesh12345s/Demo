@@ -1,20 +1,28 @@
+# app.py
+
 import nltk
 import streamlit as st
 
-# Download the necessary corpora manually
+# Download the necessary corpora manually (only if not already downloaded)
 def download_nltk_corpora():
     try:
-        nltk.download('punkt', quiet=True)  # Required for tokenization
+        nltk.download('punkt', quiet=True)  # Tokenizer
         nltk.download('averaged_perceptron_tagger', quiet=True)  # POS Tagger
         nltk.download('wordnet', quiet=True)  # WordNet
-        nltk.download('omw-1.4', quiet=True)  # OMW WordNet support
+        nltk.download('omw-1.4', quiet=True)  # OMW WordNet
     except Exception as e:
         st.error(f"Error downloading NLTK corpora: {e}")
 
 download_nltk_corpora()
 
-# After this, continue with your imports and the rest of your app code
-import streamlit as st
+# Download TextBlob corpora as well (to avoid MissingCorpusError)
+from textblob import download_corpora
+try:
+    download_corpora.download_all()
+except Exception as e:
+    st.error(f"Error downloading TextBlob corpora: {e}")
+
+# Continue with app imports
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from nrclex import NRCLex
 import pandas as pd
@@ -26,7 +34,7 @@ st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")
 # Initialize sentiment analyzer
 analyzer = SentimentIntensityAnalyzer()
 
-# Load Custom Emotions from CSV
+# Load Custom Emotions from CSV (optional)
 custom_emotions = {}
 try:
     emotion_df = pd.read_csv("custom_emotions.csv")
@@ -35,7 +43,7 @@ try:
         keywords = [kw.strip().lower() for kw in row['Keywords'].split(',')]
         custom_emotions[emotion] = keywords
 except FileNotFoundError:
-    st.error("Custom emotions file (custom_emotions.csv) not found. Please ensure it exists in the directory.")
+    st.warning("Custom emotions file (custom_emotions.csv) not found. Continuing without custom emotions.")
 
 st.title("💬 Sentiment & Emotion Analyzer")
 st.write("### Enter a message below to analyze its sentiment and emotions:")
@@ -57,13 +65,17 @@ if st.button("Analyze"):
             sentiment_label = 'Neutral'
 
         # Analyze emotions using NRCLex
-        emotion = NRCLex(user_message)
-        emotion_scores = emotion.raw_emotion_scores  # Only get scores
+        try:
+            emotion = NRCLex(user_message)
+            emotion_scores = emotion.raw_emotion_scores
+        except Exception as e:
+            st.error(f"Emotion detection failed: {e}")
+            emotion_scores = {}
 
-        # Custom Emotion Detection (Counting words with regex)
+        # Custom Emotion Detection
         detected_emotions = {}
         total_words = len(user_message.split())
-        total_words = max(total_words, 1)  # Prevent division by zero
+        total_words = max(total_words, 1)
 
         if custom_emotions:
             for emo, keywords in custom_emotions.items():
@@ -74,16 +86,16 @@ if st.button("Analyze"):
                     if count > 0:
                         detected_emotions[emo] = detected_emotions.get(emo, 0) + count
 
-        # Combine NRCLex and Custom Detected Emotions
+        # Combine NRCLex + Custom Detected Emotions
         for emo, count in detected_emotions.items():
             emotion_scores[emo] = emotion_scores.get(emo, 0) + count
 
-        # Convert emotion scores to normalized decimal (0.0000)
+        # Normalize emotion scores
         emotion_scores_normalized = {
             emo: round(score / total_words, 4) for emo, score in emotion_scores.items()
         }
 
-        # Sort emotions by score
+        # Sort emotions
         sorted_emotions = sorted(emotion_scores_normalized.items(), key=lambda x: x[1], reverse=True)
 
         # Display results
@@ -91,7 +103,7 @@ if st.button("Analyze"):
         st.write(f"**Message:** {user_message}")
         st.write(f"**Sentiment:** **{sentiment_label}** ({sentiment})")
 
-        # Visualize sentiment (Pie Chart)
+        # Visualize sentiment
         sentiment_data = {
             'Positive': sentiment['pos'],
             'Neutral': sentiment['neu'],
@@ -102,18 +114,7 @@ if st.button("Analyze"):
                                 title='Sentiment Distribution',
                                 color_discrete_sequence=px.colors.sequential.RdBu)
 
-        # Visualize emotions (Bar Chart)
-        if sorted_emotions:
-            emotion_df = pd.DataFrame(sorted_emotions, columns=["Emotion", "Score"])
-            fig_emotions = px.bar(emotion_df, x='Emotion', y='Score',
-                                   title='Emotion Intensities',
-                                   text='Score',
-                                   color='Score',
-                                   color_continuous_scale='Blues')
-        else:
-            emotion_df = None
-
-        # Display side-by-side
+        # Visualize emotions
         col1, col2 = st.columns(2)
 
         with col1:
@@ -122,12 +123,18 @@ if st.button("Analyze"):
 
         with col2:
             st.subheader("📈 Emotion Intensities")
-            if emotion_df is not None:
+            if sorted_emotions:
+                emotion_df = pd.DataFrame(sorted_emotions, columns=["Emotion", "Score"])
+                fig_emotions = px.bar(emotion_df, x='Emotion', y='Score',
+                                       title='Emotion Intensities',
+                                       text='Score',
+                                       color='Score',
+                                       color_continuous_scale='Blues')
                 st.plotly_chart(fig_emotions, use_container_width=True)
             else:
                 st.info("No emotions detected.")
 
-        # Also display emotion scores as list
+        # Display emotion scores as list
         st.subheader("📋 Detailed Emotion Scores")
         if not sorted_emotions:
             st.write("- No emotions detected.")
