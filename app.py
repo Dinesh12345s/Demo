@@ -2,19 +2,29 @@ import nltk
 import streamlit as st
 st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")
 
-# Ensure required corpora are downloaded
-@st.cache_resource(show_spinner=False)
+# Ensure required corpora are downloaded (manual check)
 def download_nltk_corpora():
-    required = ['punkt', 'averaged_perceptron_tagger', 'wordnet', 'omw-1.4']
-    for corpus in required:
-        try:
-            nltk.data.find(f'tokenizers/{corpus}')  # For punkt
-        except LookupError:
-            try:
-                nltk.data.find(f'corpora/{corpus}')  # For wordnet, omw-1.4
-            except LookupError:
-                nltk.download(corpus, quiet=True)
+    try:
+        nltk.data.find('tokenizers/punkt')  # Check if punkt is available
+    except LookupError:
+        nltk.download('punkt', quiet=True)
+    
+    try:
+        nltk.data.find('corpora/averaged_perceptron_tagger')  # Check if POS tagger is available
+    except LookupError:
+        nltk.download('averaged_perceptron_tagger', quiet=True)
+        
+    try:
+        nltk.data.find('corpora/wordnet')  # Check if WordNet is available
+    except LookupError:
+        nltk.download('wordnet', quiet=True)
+    
+    try:
+        nltk.data.find('corpora/omw-1.4')  # Check if OMW corpus is available
+    except LookupError:
+        nltk.download('omw-1.4', quiet=True)
 
+# Call this function once to ensure corpora are available
 download_nltk_corpora()
 
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
