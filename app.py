@@ -1,38 +1,27 @@
 import nltk
 import streamlit as st
-st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")
 
-# Ensure required corpora are downloaded (manual check)
+# Download the necessary corpora manually
 def download_nltk_corpora():
     try:
-        nltk.data.find('tokenizers/punkt')  # Check if punkt is available
-    except LookupError:
-        nltk.download('punkt', quiet=True)
-    
-    try:
-        nltk.data.find('corpora/averaged_perceptron_tagger')  # Check if POS tagger is available
-    except LookupError:
-        nltk.download('averaged_perceptron_tagger', quiet=True)
-        
-    try:
-        nltk.data.find('corpora/wordnet')  # Check if WordNet is available
-    except LookupError:
-        nltk.download('wordnet', quiet=True)
-    
-    try:
-        nltk.data.find('corpora/omw-1.4')  # Check if OMW corpus is available
-    except LookupError:
-        nltk.download('omw-1.4', quiet=True)
+        nltk.download('punkt', quiet=True)  # Required for tokenization
+        nltk.download('averaged_perceptron_tagger', quiet=True)  # POS Tagger
+        nltk.download('wordnet', quiet=True)  # WordNet
+        nltk.download('omw-1.4', quiet=True)  # OMW WordNet support
+    except Exception as e:
+        st.error(f"Error downloading NLTK corpora: {e}")
 
-# Call this function once to ensure corpora are available
 download_nltk_corpora()
 
+# After this, continue with your imports and the rest of your app code
+import streamlit as st
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from nrclex import NRCLex
 import pandas as pd
 import plotly.express as px
 import re
 
+st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")
 
 # Initialize sentiment analyzer
 analyzer = SentimentIntensityAnalyzer()
