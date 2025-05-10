@@ -1,5 +1,7 @@
 streamlit
-vaderSentiment
+nltk
+textblob
 nrclex
 pandas
 plotly
+vaderSentiment
