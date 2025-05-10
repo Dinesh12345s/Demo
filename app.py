@@ -1,13 +1,10 @@
-
 import streamlit as st
-st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")  # Must be first
-import os
-
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-from nrclex import NRCLex
 import pandas as pd
 import plotly.express as px
 import re
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")
 
 # Initialize sentiment analyzer
 analyzer = SentimentIntensityAnalyzer()
@@ -42,51 +39,27 @@ if st.button("Analyze"):
         else:
             sentiment_label = 'Neutral'
 
-        # Analyze emotions using NRCLex
-        emotion = NRCLex(user_message)
-        emotion_scores = emotion.raw_emotion_scores  # Only get scores
-
-        # Custom Emotion Detection (Counting words with regex)
+        # Custom Emotion Detection
         detected_emotions = {}
         total_words = len(user_message.split())
-        total_words = max(total_words, 1)  # Prevent division by zero
+        total_words = max(total_words, 1)
 
-        if custom_emotions:
-            for emo, keywords in custom_emotions.items():
-                for word in keywords:
-                    pattern = r'\b' + re.escape(word.lower()) + r'\b'
-                    matches = re.findall(pattern, user_message.lower())
-                    count = len(matches)
-                    if count > 0:
-                        detected_emotions[emo] = detected_emotions.get(emo, 0) + count
+        for emo, keywords in custom_emotions.items():
+            for word in keywords:
+                pattern = r'\b' + re.escape(word.lower()) + r'\b'
+                matches = re.findall(pattern, user_message.lower())
+                count = len(matches)
+                if count > 0:
+                    detected_emotions[emo] = detected_emotions.get(emo, 0) + count
 
-        # Combine NRCLex and Custom Detected Emotions
-        for emo, count in detected_emotions.items():
-            emotion_scores[emo] = emotion_scores.get(emo, 0) + count
-
-        # Convert emotion scores to normalized decimal (0.0000)
-        emotion_scores_normalized = {
-            emo: round(score / total_words, 4) for emo, score in emotion_scores.items()
-        }
-
-        # Sort emotions by score
+        # Normalize and Sort Emotion Scores
+        emotion_scores_normalized = {emo: round(score / total_words, 4) for emo, score in detected_emotions.items()}
         sorted_emotions = sorted(emotion_scores_normalized.items(), key=lambda x: x[1], reverse=True)
 
         # Display results
         st.subheader("🔍 Analysis Results")
         st.write(f"**Message:** {user_message}")
         st.write(f"**Sentiment:** **{sentiment_label}** ({sentiment})")
-
-        # Visualize sentiment (Pie Chart)
-        sentiment_data = {
-            'Positive': sentiment['pos'],
-            'Neutral': sentiment['neu'],
-            'Negative': sentiment['neg']
-        }
-        sentiment_df = pd.DataFrame(sentiment_data.items(), columns=["Sentiment", "Score"])
-        fig_sentiment = px.pie(sentiment_df, values='Score', names='Sentiment',
-                                title='Sentiment Distribution',
-                                color_discrete_sequence=px.colors.sequential.RdBu)
 
         # Visualize emotions (Bar Chart)
         if sorted_emotions:
@@ -96,24 +69,11 @@ if st.button("Analyze"):
                                    text='Score',
                                    color='Score',
                                    color_continuous_scale='Blues')
+            st.plotly_chart(fig_emotions, use_container_width=True)
         else:
-            emotion_df = None
+            st.info("No emotions detected.")
 
-        # Display side-by-side
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.subheader("📊 Sentiment Distribution")
-            st.plotly_chart(fig_sentiment, use_container_width=True)
-
-        with col2:
-            st.subheader("📈 Emotion Intensities")
-            if emotion_df is not None:
-                st.plotly_chart(fig_emotions, use_container_width=True)
-            else:
-                st.info("No emotions detected.")
-
-        # Also display emotion scores as list
+        # Display emotion scores as list
         st.subheader("📋 Detailed Emotion Scores")
         if not sorted_emotions:
             st.write("- No emotions detected.")
