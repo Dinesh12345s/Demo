@@ -61,23 +61,28 @@ if st.button("Analyze"):
         st.write(f"**Message:** {user_message}")
         st.write(f"**Sentiment:** **{sentiment_label}** ({sentiment})")
 
-        # Visualize Sentiment (Pie Chart)
-        sentiment_data = {'Positive': sentiment['pos'], 'Neutral': sentiment['neu'], 'Negative': sentiment['neg']}
-        sentiment_df = pd.DataFrame(sentiment_data.items(), columns=["Sentiment", "Score"])
-        fig_sentiment = px.pie(sentiment_df, values='Score', names='Sentiment', title='Sentiment Distribution', color_discrete_sequence=px.colors.sequential.RdBu)
-        st.plotly_chart(fig_sentiment, use_container_width=True)
+        # Side-by-Side Layout
+        col1, col2 = st.columns(2)
 
-        # Visualize emotions (Bar Chart)
-        if sorted_emotions:
-            emotion_df = pd.DataFrame(sorted_emotions, columns=["Emotion", "Score"])
-            fig_emotions = px.bar(emotion_df, x='Emotion', y='Score',
-                                   title='Emotion Intensities',
-                                   text='Score',
-                                   color='Score',
-                                   color_continuous_scale='Blues')
-            st.plotly_chart(fig_emotions, use_container_width=True)
-        else:
-            st.info("No emotions detected.")
+        with col1:
+            # Visualize Sentiment (Pie Chart)
+            sentiment_data = {'Positive': sentiment['pos'], 'Neutral': sentiment['neu'], 'Negative': sentiment['neg']}
+            sentiment_df = pd.DataFrame(sentiment_data.items(), columns=["Sentiment", "Score"])
+            fig_sentiment = px.pie(sentiment_df, values='Score', names='Sentiment', title='Sentiment Distribution', color_discrete_sequence=px.colors.sequential.RdBu)
+            st.plotly_chart(fig_sentiment, use_container_width=True)
+
+        with col2:
+            # Visualize Emotions (Bar Chart)
+            if sorted_emotions:
+                emotion_df = pd.DataFrame(sorted_emotions, columns=["Emotion", "Score"])
+                fig_emotions = px.bar(emotion_df, x='Emotion', y='Score',
+                                       title='Emotion Intensities',
+                                       text='Score',
+                                       color='Score',
+                                       color_continuous_scale='Blues')
+                st.plotly_chart(fig_emotions, use_container_width=True)
+            else:
+                st.info("No emotions detected.")
 
         # Display emotion scores as list
         st.subheader("📋 Detailed Emotion Scores")
