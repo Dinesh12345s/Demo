@@ -1,12 +1,22 @@
-
+import nltk
 import streamlit as st
-st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")  # Must be first
-
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from nrclex import NRCLex
 import pandas as pd
 import plotly.express as px
 import re
+
+# Download the necessary NLTK corpora
+def download_nltk_corpora():
+    try:
+        nltk.download('punkt', quiet=True)  # Required for tokenization
+        nltk.download('averaged_perceptron_tagger', quiet=True)  # POS Tagger
+        nltk.download('wordnet', quiet=True)  # WordNet
+        nltk.download('omw-1.4', quiet=True)  # OMW WordNet support
+    except Exception as e:
+        st.error(f"Error downloading NLTK corpora: {e}")
+
+download_nltk_corpora()
 
 # Initialize sentiment analyzer
 analyzer = SentimentIntensityAnalyzer()
@@ -22,6 +32,7 @@ try:
 except FileNotFoundError:
     st.error("Custom emotions file (custom_emotions.csv) not found. Please ensure it exists in the directory.")
 
+st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")
 st.title("💬 Sentiment & Emotion Analyzer")
 st.write("### Enter a message below to analyze its sentiment and emotions:")
 
