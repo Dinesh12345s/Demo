@@ -1,4 +1,8 @@
-nltk.download('punkt', quiet=True)
+import nltk  # <== FIRST import nltk
+nltk.download('punkt', quiet=True)  
+
+import streamlit as st
+from nrclex import NRCLex
 
 import streamlit as st
 st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")  # Must be first
