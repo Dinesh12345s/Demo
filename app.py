@@ -1,14 +1,17 @@
+nltk.download('punkt', quiet=True)
 import streamlit as st
-import pandas as pd
-import re
-import plotly.express as px
+st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")  # Must be first
+
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from nrclex import NRCLex
+import pandas as pd
+import plotly.express as px
+import re
 
-# Initialize Sentiment Analyzer globally
-sentiment_analyzer = SentimentIntensityAnalyzer()
+# Initialize sentiment analyzer
+analyzer = SentimentIntensityAnalyzer()
 
-# Load custom emotions from CSV
+# Load Custom Emotions from CSV
 custom_emotions = {}
 try:
     emotion_df = pd.read_csv("custom_emotions.csv")
@@ -18,72 +21,6 @@ try:
         custom_emotions[emotion] = keywords
 except FileNotFoundError:
     st.error("Custom emotions file (custom_emotions.csv) not found. Please ensure it exists in the directory.")
-
-def analyze_sentiment(text: str):
-    """
-    Returns sentiment label and sentiment score dict from VADER.
-    """
-    sentiment = sentiment_analyzer.polarity_scores(text)
-    if sentiment['compound'] >= 0.05:
-        label = 'Positive'
-    elif sentiment['compound'] <= -0.05:
-        label = 'Negative'
-    else:
-        label = 'Neutral'
-    return label, sentiment
-
-def extract_emotion_scores(text: str):
-    """
-    Returns NRCLex emotion scores as a dict.
-    Example: {'joy': 2, 'fear': 1}
-    """
-    emotion = NRCLex(text)
-    return emotion.raw_emotion_scores
-
-def extract_custom_emotions(text: str, custom_emotions: dict):
-    """
-    Returns custom detected emotions based on keyword matches.
-    Example: {'gratitude': 3}
-    """
-    detected_emotions = {}
-    for emo, keywords in custom_emotions.items():
-        for word in keywords:
-            pattern = r'\b' + re.escape(word.lower()) + r'\b'
-            matches = re.findall(pattern, text.lower())
-            count = len(matches)
-            if count > 0:
-                detected_emotions[emo] = detected_emotions.get(emo, 0) + count
-    return detected_emotions
-
-def combine_emotions(text: str, custom_emotions: dict = None):
-    """
-    Combines NRCLex and custom detected emotions into normalized scores.
-    Returns sorted list of (emotion, normalized_score)
-    """
-    # 1. Emotion analysis with NRCLex
-    nrc_scores = extract_emotion_scores(text)
-    
-    # 2. Custom Emotion Detection based on CSV file
-    custom_scores = extract_custom_emotions(text, custom_emotions) if custom_emotions else {}
-
-    # 3. Combine the results
-    combined = nrc_scores.copy()
-    for emo, count in custom_scores.items():
-        combined[emo] = combined.get(emo, 0) + count
-
-    # 4. Normalize by word count
-    total_words = len(text.split())
-    total_words = max(total_words, 1)
-
-    # 5. Normalize and sort by score
-    normalized_scores = {
-        emo: round(score / total_words, 4) for emo, score in combined.items()
-    }
-
-    return sorted(normalized_scores.items(), key=lambda x: x[1], reverse=True)
-
-# Streamlit UI setup
-st.set_page_config(page_title="Sentiment & Emotion Analyzer", layout="wide")
 
 st.title("💬 Sentiment & Emotion Analyzer")
 st.write("### Enter a message below to analyze its sentiment and emotions:")
@@ -95,13 +32,46 @@ if st.button("Analyze"):
     if user_message.strip() == "":
         st.warning("⚠️ Please enter a valid message.")
     else:
-        # Sentiment analysis using VADER
-        sentiment_label, sentiment = analyze_sentiment(user_message)
+        # Analyze sentiment
+        sentiment = analyzer.polarity_scores(user_message)
+        if sentiment['compound'] >= 0.05:
+            sentiment_label = 'Positive'
+        elif sentiment['compound'] <= -0.05:
+            sentiment_label = 'Negative'
+        else:
+            sentiment_label = 'Neutral'
 
-        # Emotion analysis combining NRC and custom emotions
-        sorted_emotions = combine_emotions(user_message, custom_emotions)
+        # Analyze emotions using NRCLex
+        emotion = NRCLex(user_message)
+        emotion_scores = emotion.raw_emotion_scores  # Only get scores
 
-        # Visualizations and results display
+        # Custom Emotion Detection (Counting words with regex)
+        detected_emotions = {}
+        total_words = len(user_message.split())
+        total_words = max(total_words, 1)  # Prevent division by zero
+
+        if custom_emotions:
+            for emo, keywords in custom_emotions.items():
+                for word in keywords:
+                    pattern = r'\b' + re.escape(word.lower()) + r'\b'
+                    matches = re.findall(pattern, user_message.lower())
+                    count = len(matches)
+                    if count > 0:
+                        detected_emotions[emo] = detected_emotions.get(emo, 0) + count
+
+        # Combine NRCLex and Custom Detected Emotions
+        for emo, count in detected_emotions.items():
+            emotion_scores[emo] = emotion_scores.get(emo, 0) + count
+
+        # Convert emotion scores to normalized decimal (0.0000)
+        emotion_scores_normalized = {
+            emo: round(score / total_words, 4) for emo, score in emotion_scores.items()
+        }
+
+        # Sort emotions by score
+        sorted_emotions = sorted(emotion_scores_normalized.items(), key=lambda x: x[1], reverse=True)
+
+        # Display results
         st.subheader("🔍 Analysis Results")
         st.write(f"**Message:** {user_message}")
         st.write(f"**Sentiment:** **{sentiment_label}** ({sentiment})")
@@ -114,14 +84,17 @@ if st.button("Analyze"):
         }
         sentiment_df = pd.DataFrame(sentiment_data.items(), columns=["Sentiment", "Score"])
         fig_sentiment = px.pie(sentiment_df, values='Score', names='Sentiment',
-                               title='Sentiment Distribution', color_discrete_sequence=px.colors.sequential.RdBu)
+                                title='Sentiment Distribution',
+                                color_discrete_sequence=px.colors.sequential.RdBu)
 
         # Visualize emotions (Bar Chart)
         if sorted_emotions:
             emotion_df = pd.DataFrame(sorted_emotions, columns=["Emotion", "Score"])
             fig_emotions = px.bar(emotion_df, x='Emotion', y='Score',
-                                  title='Emotion Intensities', text='Score',
-                                  color='Score', color_continuous_scale='Blues')
+                                   title='Emotion Intensities',
+                                   text='Score',
+                                   color='Score',
+                                   color_continuous_scale='Blues')
         else:
             emotion_df = None
 
